@@ -1,0 +1,1 @@
+include ':app', ':acm-plugin', ':acm-plugin-log'

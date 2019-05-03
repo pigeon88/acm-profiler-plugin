@@ -1,0 +1,47 @@
+apply plugin: 'groovy'
+apply plugin: 'maven'
+
+sourceSets {
+    main {
+        groovy {
+            //srcDir 'src/main/groovy'
+            srcDir 'src/main/java'
+        }
+
+        java {
+            srcDir 'src/main/java'
+        }
+    }
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    compile 'com.android.tools.build:gradle:2.3.3'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    //compile project(':buildsrc-profiler')
+}
+
+repositories {
+    //maven{ url 'https://github.com/yangyp0101/repo/'}
+    jcenter()
+    mavenCentral()
+}
+
+//最好加上全局编码设置
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            //设置插件的GAV参数
+            pom.groupId = 'com.studio.plugin'
+            pom.artifactId = 'studio-acm'
+            pom.version = "1.0"
+            //文件发布到下面目录
+            repository(url: uri('../repo'))
+        }
+    }
+}
