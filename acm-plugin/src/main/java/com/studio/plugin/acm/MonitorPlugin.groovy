@@ -1,5 +1,6 @@
 package com.studio.plugin.acm
 
+import com.android.build.gradle.BaseExtension
 import com.studio.plugin.acm.profiler.AopEngine
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
@@ -25,6 +26,9 @@ class MonitorPlugin implements Plugin<Project> {
                 }
             }
         }
+
+        //project.getExtensions().findByType(BaseExtension.class)
+                //.registerTransform(new MyCustomTransform())
     }
 
     private DefaultDomainObjectSet<ApplicationVariant> getAndroidVariants(Project project) {

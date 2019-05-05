@@ -1,6 +1,7 @@
-package com.demo;
+package com.studio.plugin.acm.log;
 
 import android.os.Environment;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -23,7 +24,7 @@ import java.util.regex.Pattern;
 /**
  * Created by Administrator on 2017/11/8.
  */
-public class OSLog {
+public class AopLog {
 
     private static final String TAG_FORMAT = "%s/%s[%s]";
     private static final String TAG_CLASS_FORMAT = "%s.%s_%d";
@@ -62,38 +63,39 @@ public class OSLog {
         logTagMap.put(Log.ASSERT, "A/");
     }
 
-    private static final HashMap<String, OSLog> INSTANCE = new HashMap<>();
+    private static final HashMap<String, AopLog> INSTANCE = new HashMap<>();
     private static final SimpleDateFormat sdfLog = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
     private static final SimpleDateFormat sdfFile = new SimpleDateFormat("yyMMdd");
     private static final Pattern ANONYMOUS_CLASS = Pattern.compile("(\\$\\d+)+$");
     private static final String rootDir = "Android/data/calm/";
     private String dirName;
-    private int retentionTime = 7;
+    private Class<?> logClass;
+    private static int retentionTime = 7;
 
-    private OSLog(String dirName, int retentionTime) {
+    private AopLog(String dirName, Class<?> logClass) {
         this.dirName = dirName;
-        this.retentionTime = retentionTime;
+        this.logClass = logClass;
     }
 
-    public static OSLog getLog() {
+    public static AopLog getLog() {
         return getLog(DEFAULT_DIR_NAME);
     }
 
-    public static OSLog getLog(String dirName) {
-        return getLog(dirName, 7);
+    public static AopLog getLog(String dirName) {
+        return getLog(dirName, AopLog.class);
     }
 
-    public static synchronized OSLog getLog(String dirName, int retentionTime) {
-        OSLog log = INSTANCE.get(dirName);
+    public static AopLog getLog(String dirName, Class<?> logClass) {
+        AopLog log = INSTANCE.get(dirName);
         if (log == null) {
-            log = new OSLog(dirName, retentionTime <= 0 ? 7 : retentionTime);
+            log = new AopLog(dirName, logClass);
             INSTANCE.put(dirName, log);
-        } else {
-            if (log.retentionTime < retentionTime) {
-                log.retentionTime = retentionTime;
-            }
         }
         return log;
+    }
+
+    public static void setRetentionTime(int retentionTime) {
+        AopLog.retentionTime = retentionTime;
     }
 
     public File getOutputDir() {
@@ -114,22 +116,28 @@ public class OSLog {
     }
 
     private String getTag() {
-        return getTag(dirName);
+        return getTag(dirName, logClass);
     }
 
-    private static String getTag(String dirName) {
+    private static String getTag(String dirName, Class<?> logClass) {
         dirName = dirName != null ? dirName : DEFAULT_DIR_NAME;
-        return String.format(TAG_FORMAT, dirName, createStackElementTag(), Thread.currentThread().getName());
+        return String.format(TAG_FORMAT, dirName, createStackElementTag(logClass), getThreadName());
+    }
+
+    private static String getThreadName() {
+        return Looper.getMainLooper() == Looper.myLooper() ? "main" : "thread-" + Thread.currentThread().getName();
     }
 
     private String getLogTag(int priority) {
         return logTagMap.get(priority) + getTag();
     }
 
-    private static String createStackElementTag() {
+    private static String createStackElementTag(Class<?> logClass) {
         StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
         for (StackTraceElement element : stackTraceElements) {
-            if (!element.getClassName().equals(OSLog.class.getName())) {
+            String elementClassName = element.getClassName();
+            if (!(elementClassName.equals(AopLog.class.getName())
+                    || elementClassName.equals(logClass.getName()))) {
                 String tag = element.getClassName();
                 /*Matcher m = ANONYMOUS_CLASS.matcher(tag);
                 if (m.find()) {
@@ -140,28 +148,6 @@ public class OSLog {
             }
         }
         return "UNKNOWN";
-    }
-
-    public static void info(String msg, Object... args) {
-        getLog().println(Log.INFO, null, msg, args);
-    }
-
-    public static void error(String msg, Object... args) {
-        error(null, msg, args);
-    }
-
-    public static void error(Throwable t, String msg, Object... args) {
-        getLog().println(Log.ERROR, t, msg, args);
-    }
-
-    public void println(int priority, String msg, Object... args) {
-        println(priority, null, msg, args);
-    }
-
-    public void println(int priority, Throwable t, String msg, Object... args) {
-        final String message = getMessage(t, msg, args);
-        //Log.i(getTag(), message);
-        Log.println(priority, getTag(), message != null ? message : "{null}");
     }
 
     public void log(String msg, Object... args) {
@@ -179,7 +165,6 @@ public class OSLog {
     private void logInner(boolean immediate, Throwable t, String msg, Object... args) {
         final int priority = t != null ? Log.ERROR : Log.INFO;
         final String message = getMessage(t, msg, args);
-        println(priority, message);
         final File outDir = getOutputDir();
         if (immediate) {
             final String logTag = getLogTag(priority);

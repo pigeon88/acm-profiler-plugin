@@ -39,7 +39,6 @@ public class AopClassVisitor extends ClassVisitor {
                 "<init>".equalsIgnoreCase(name)
                         || isAcc(access, Opcodes.ACC_ABSTRACT)
                         || isAcc(access, Opcodes.ACC_NATIVE)
-                        || isAcc(access, Opcodes.ACC_STATIC)
         )) {
             return new AopMethodVisitor(api, mv, access, desc, mActualClassFullName, name, mTargetPackageName, mExecuteTimeout);
         }

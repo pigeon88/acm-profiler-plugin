@@ -75,31 +75,19 @@ class AopMethodVisitor extends AdviceAdapter {
             return;
         }
 
-        /*mv.visitLdcInsn(mClassName);
-        mv.visitLdcInsn(mMethodName);
-        mv.visitMethodInsn(INVOKESTATIC, "android/support/studio/plugin/monitor/AopInvoker", "newInvoker", "(Ljava/lang/String;Ljava/lang/String;)Landroid/support/studio/plugin/monitor/AopInvoker;", false);
-        mv.visitInsn(DUP);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "android/support/studio/plugin/monitor/AopInvoker", "aspectBeforeInvoke", "()V", false);
-        mInvokerVarIndex = newLocal(Type.getType("Landroid/support/studio/plugin/monitor/AopInvoker;"));
-        mv.visitVarInsn(ASTORE, mInvokerVarIndex);*/
-
-        /*mv.visitVarInsn(ALOAD, 0);
-        mv.visitLdcInsn(mMethodName);
-        mv.visitLdcInsn(methodDesc);
-        mv.visitMethodInsn(INVOKESTATIC, "android/support/studio/plugin/monitor/AopInvoker", "newInvoker", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)Landroid/support/studio/plugin/monitor/AopInvoker;", false);*/
-
         mv.visitTypeInsn(NEW, mAopClassName);
         mv.visitInsn(DUP);
-        mv.visitVarInsn(ALOAD, 0);
+        //mv.visitVarInsn(ALOAD, 0);
+        mv.visitLdcInsn(mClassName);
         mv.visitLdcInsn(mMethodName);
         mv.visitLdcInsn(getArgsName(methodDesc));
         mv.visitLdcInsn(mExecuteTimeout);
-        mv.visitMethodInsn(INVOKESPECIAL, mAopClassName, "<init>", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;I)V", false);
-        mInvokerVarIndex = newLocal(Type.getType("Landroid/support/studio/plugin/monitor/AopInvoker;"));
+        mv.visitMethodInsn(INVOKESPECIAL, mAopClassName, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V", false);
+        mInvokerVarIndex = newLocal(Type.getType(String.format("L%s;", mAopClassName))); //"Landroid/support/studio/plugin/monitor/AopInvoker;"
         mv.visitVarInsn(ASTORE, mInvokerVarIndex);
 
         mv.visitVarInsn(ALOAD, mInvokerVarIndex);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "android/support/studio/plugin/monitor/AopInvoker", "beforeInvoke", "()V", false);
+        mv.visitMethodInsn(INVOKEVIRTUAL, mAopClassName, "beforeInvoke", "()V", false);
     }
 
     /**
@@ -110,7 +98,7 @@ class AopMethodVisitor extends AdviceAdapter {
             return;
         }
         mv.visitVarInsn(ALOAD, mInvokerVarIndex);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "android/support/studio/plugin/monitor/AopInvoker", "afterInvoke", "()V", false);
+        mv.visitMethodInsn(INVOKEVIRTUAL, mAopClassName, "afterInvoke", "()V", false);
     }
 
     public static String getArgsName(String argsName) {

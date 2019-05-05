@@ -7,12 +7,12 @@ package com.studio.plugin.acm.log;
  */
 public abstract class AopInvoker {
 
-    private final Object mTarget;
-    private final String mMethodName;
-    private final String mArgsName;
+    protected final String mTarget;
+    protected final String mMethodName;
+    protected final String mArgsName;
     protected final int mExecuteTimeout;
 
-    public AopInvoker(Object target, String methodName, String argsName, int executeTimeout) {
+    public AopInvoker(String target, String methodName, String argsName, int executeTimeout) {
         this.mTarget = target;
         this.mMethodName = methodName;
         this.mArgsName = argsName;
@@ -29,7 +29,7 @@ public abstract class AopInvoker {
      */
     public abstract void afterInvoke();
 
-    public Object getTarget() {
+    public String getTarget() {
         return mTarget;
     }
 
@@ -42,17 +42,6 @@ public abstract class AopInvoker {
     }
 
     public int getExecuteTimeout() {
-        return mExecuteTimeout <= 0 ? 500 : mExecuteTimeout;
-    }
-
-    /**
-     * 生成一个invoker
-     *
-     * @param className
-     * @param methodName
-     * @return
-     */
-    public static AopInvoker newInvoker(Object className, String methodName, String argsName, int executeTimeout) {
-        return new LogAopInvoker(className, methodName, argsName, executeTimeout);
+        return mExecuteTimeout;
     }
 }

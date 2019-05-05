@@ -12,7 +12,6 @@ import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -25,7 +24,7 @@ import java.util.regex.Pattern;
  */
 public class OSLog {
 
-    private static final String TAG_FORMAT = "%s/%s[%s]";
+    private static final String TAG_FORMAT = "%s[%s]";
     private static final String TAG_CLASS_FORMAT = "%s.%s_%d";
     private static final String DEFAULT_DIR_NAME = "log";
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -51,22 +50,11 @@ public class OSLog {
         }
     });
 
-    private static final Map<Integer, String> logTagMap = new HashMap<>();
-
-    static {
-        logTagMap.put(Log.VERBOSE, "V/");
-        logTagMap.put(Log.DEBUG, "D/");
-        logTagMap.put(Log.INFO, "I/");
-        logTagMap.put(Log.WARN, "W/");
-        logTagMap.put(Log.ERROR, "E/");
-        logTagMap.put(Log.ASSERT, "A/");
-    }
-
     private static final HashMap<String, OSLog> INSTANCE = new HashMap<>();
     private static final SimpleDateFormat sdfLog = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
     private static final SimpleDateFormat sdfFile = new SimpleDateFormat("yyMMdd");
     private static final Pattern ANONYMOUS_CLASS = Pattern.compile("(\\$\\d+)+$");
-    private static final String rootDir = "Android/data/calm/";
+    private static final String rootDir = "Android/data/";
     private String dirName;
     private int retentionTime = 7;
 
@@ -114,16 +102,15 @@ public class OSLog {
     }
 
     private String getTag() {
-        return getTag(dirName);
+        return getTag(null);
     }
 
     private static String getTag(String dirName) {
-        dirName = dirName != null ? dirName : DEFAULT_DIR_NAME;
-        return String.format(TAG_FORMAT, dirName, createStackElementTag(), Thread.currentThread().getName());
-    }
-
-    private String getLogTag(int priority) {
-        return logTagMap.get(priority) + getTag();
+        String tag = "";
+        if (dirName != null) {
+            tag = dirName + "/";
+        }
+        return tag + String.format(TAG_FORMAT, createStackElementTag(), Thread.currentThread().getName());
     }
 
     private static String createStackElementTag() {
@@ -161,7 +148,7 @@ public class OSLog {
     public void println(int priority, Throwable t, String msg, Object... args) {
         final String message = getMessage(t, msg, args);
         //Log.i(getTag(), message);
-        Log.println(priority, getTag(), message != null ? message : "{null}");
+        Log.println(priority, getTag(dirName), message != null ? message : "{null}");
     }
 
     public void log(String msg, Object... args) {
@@ -182,11 +169,11 @@ public class OSLog {
         println(priority, message);
         final File outDir = getOutputDir();
         if (immediate) {
-            final String logTag = getLogTag(priority);
+            final String logTag = getTag();
             writeLog(logTag, message, outDir, retentionTime);
         } else {
             final Date logDate = new Date();
-            final String logTag = getLogTag(priority);
+            final String logTag = getTag();
             EXECUTOR_SERVICE.execute(new Runnable() {
                 @Override
                 public void run() {

@@ -39,7 +39,7 @@ uploadArchives {
             //设置插件的GAV参数
             pom.groupId = 'com.studio.plugin'
             pom.artifactId = 'studio-acm'
-            pom.version = "1.0"
+            pom.version = "1.1.190505"
             //文件发布到下面目录
             repository(url: uri('../repo'))
         }

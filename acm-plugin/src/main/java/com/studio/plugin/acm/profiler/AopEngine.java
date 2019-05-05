@@ -21,7 +21,7 @@ import java.util.Set;
  */
 public class AopEngine {
 
-    static final int DEFAULT_EXECUTE_TIMEOUT = 500;
+    public static final int DEFAULT_EXECUTE_TIMEOUT = 1000 >> 4;
 
     public interface FileRecurseCallback {
         void onFileRecurse(File file);
@@ -32,22 +32,19 @@ public class AopEngine {
     }
 
     public static void doAspect(final File classDir, final String includePackage, final Set<String> excludeClass, final String aopClassName, final int executeTimeout) {
-        eachFileRecurse(classDir, new FileRecurseCallback() {
-            @Override
-            public void onFileRecurse(File file) {
-                if (!isAppClass(file.getPath())) {
-                    return;
-                }
+        eachFileRecurse(classDir, file -> {
+            if (!isAppClass(file.getPath())) {
+                return;
+            }
 
-                String className = getClassName(classDir.getPath(), file.getPath());
-                if (isIncluded(className, includePackage)) {
-                    if (isExcluded(className, excludeClass)
-                            || (aopClassName != null && className.startsWith(aopClassName))) {
-                        GLog("[N]: %s", file);
-                    } else {
-                        GLog("[Y]: %s", file);
-                        AopEngine.doAspect(file, /*includePackage*/aopClassName, executeTimeout);
-                    }
+            String className = getClassName(classDir.getPath(), file.getPath());
+            if (isIncluded(className, includePackage)) {
+                if (isExcluded(className, excludeClass)
+                        || (aopClassName != null && className.startsWith(aopClassName))) {
+                    GLog("[N]: %s", file);
+                } else {
+                    GLog("[Y]: %s", file);
+                    AopEngine.doAspect(file, /*includePackage*/aopClassName, executeTimeout);
                 }
             }
         });
@@ -162,6 +159,7 @@ public class AopEngine {
     }
 
     private static byte[] doAspect(ClassReader classReader, String aopClassName, int executeTimeout) {
+        executeTimeout = executeTimeout <= 0 ? DEFAULT_EXECUTE_TIMEOUT : executeTimeout;
         ClassWriter tClassWrite = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         AopClassVisitor tAopClassVisitor = new AopClassVisitor(Opcodes.ASM5, tClassWrite, aopClassName, executeTimeout);
         classReader.accept(tAopClassVisitor, ClassReader.EXPAND_FRAMES);

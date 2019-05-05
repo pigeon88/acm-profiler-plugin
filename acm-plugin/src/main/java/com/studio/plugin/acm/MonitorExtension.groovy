@@ -11,7 +11,7 @@ class MonitorExtension {
     boolean enable = true
 
     @Input
-    int executeTimeout = 100
+    int executeTimeout
 
     @Input
     String includePackage
