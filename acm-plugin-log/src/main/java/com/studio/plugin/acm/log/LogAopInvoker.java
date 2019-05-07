@@ -12,10 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 public class LogAopInvoker extends AopInvoker {
 
-    private static final AopLog LOG = AopLog.getLog("profiler");
-    static final int ANR_TIMEOUT = 5 * 1000;
-
-    static final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+    private static final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new ThreadFactory() {
         @Override
         public Thread newThread(Runnable runnable) {
             ThreadGroup group = Thread.currentThread().getThreadGroup();
@@ -26,13 +23,13 @@ public class LogAopInvoker extends AopInvoker {
         }
     });
 
-    static final ThreadLocal<StackCount> threadLocalStack = new ThreadLocal<>();
-    LogContent logContent;
-    long startTimeMillis;
+    private static final AopLog LOG = AopLog.getLog("profiler");
+    private static final int ANR_TIMEOUT = 5 * 1000;
+    private static final ThreadLocal<StackCount> threadLocalStack = new ThreadLocal<>();
+    private long startTimeMillis;
 
     public LogAopInvoker(String target, String methodName, String argsName, int executeTimeout) {
         super(target, methodName, argsName, executeTimeout);
-        this.logContent = new LogContent(target, methodName, argsName);
     }
 
     @Override
@@ -48,7 +45,7 @@ public class LogAopInvoker extends AopInvoker {
 
         int count = stackCount.incrementAndGet();
         //System.out.println(String.format("[%s]%s -> stack push: %d", Thread.currentThread().getName(), mMethodName, count));
-        stackCount.add(this, logContent, count);
+        stackCount.add(this, new LogContent(mTarget, mMethodName, mArgsName, count));
         startTimeMillis = System.currentTimeMillis();
     }
 
@@ -167,8 +164,7 @@ public class LogAopInvoker extends AopInvoker {
             return stack.get(aopInvoker.toString());
         }
 
-        public void add(AopInvoker aopInvoker, LogContent logContent, int count) {
-            logContent.setCount(count);
+        public void add(AopInvoker aopInvoker, LogContent logContent) {
             stack.put(aopInvoker.toString(), logContent);
         }
 
@@ -181,20 +177,21 @@ public class LogAopInvoker extends AopInvoker {
     }
 
     static class LogContent {
+        String threadName;
         long executeTime = ANR_TIMEOUT; //默认为5s+
         String target;
         String methodName;
         String argsName;
-        boolean isANR;
-        String threadName;
         int count;
+        boolean isANR;
 
-        public LogContent(String target, String methodName, String argsName) {
+        public LogContent(String target, String methodName, String argsName, int count) {
+            this.threadName = Thread.currentThread().getName();
             this.target = target;
             this.methodName = methodName;
             this.argsName = argsName;
+            this.count = count;
             this.isANR = true;
-            this.threadName = Thread.currentThread().getName();
         }
 
         public void setCount(int count) {
