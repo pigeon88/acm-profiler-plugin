@@ -4,14 +4,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.studio.plugin</groupId>
   <artifactId>studio-acm-log</artifactId>
-  <version>1.1.190505</version>
+  <version>1.1.190507</version>
   <packaging>aar</packaging>
-  <dependencies>
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>core</artifactId>
-      <version>3.3.0</version>
-      <scope>compile</scope>
-    </dependency>
-  </dependencies>
 </project>

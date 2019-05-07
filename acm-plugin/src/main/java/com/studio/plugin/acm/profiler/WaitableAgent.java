@@ -5,9 +5,9 @@ import com.android.ide.common.internal.WaitableExecutor;
 import java.io.File;
 import java.io.IOException;
 
-public class WaitableAgent {
+public class WaitableAgent implements IWeaver {
 
-    private BaseWeaver baseWeaver;
+    private IWeaver baseWeaver;
     private WaitableExecutor waitableExecutor;
 
     public WaitableAgent(BaseWeaver baseWeaver) {

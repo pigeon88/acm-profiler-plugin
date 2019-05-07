@@ -7,7 +7,7 @@ package com.studio.plugin.acm.log;
  */
 public class SimpleLogAopInvoker extends AopInvoker {
 
-    private static final AopLog LOG = AopLog.getLog("profiler", SimpleLogAopInvoker.class);
+    private static final AopLog LOG = AopLog.getLog("profiler");
     private Long mStartTime;
 
     public SimpleLogAopInvoker(String target, String methodName, String argsName, int executeTimeout) {

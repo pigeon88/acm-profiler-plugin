@@ -1,7 +1,6 @@
 package com.studio.plugin.acm.log;
 
 import android.os.Environment;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -13,7 +12,6 @@ import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -26,7 +24,7 @@ import java.util.regex.Pattern;
  */
 public class AopLog {
 
-    private static final String TAG_FORMAT = "%s/%s[%s]";
+    private static final String TAG_FORMAT = "%s[%s]";
     private static final String TAG_CLASS_FORMAT = "%s.%s_%d";
     private static final String DEFAULT_DIR_NAME = "log";
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -52,29 +50,18 @@ public class AopLog {
         }
     });
 
-    private static final Map<Integer, String> logTagMap = new HashMap<>();
-
-    static {
-        logTagMap.put(Log.VERBOSE, "V/");
-        logTagMap.put(Log.DEBUG, "D/");
-        logTagMap.put(Log.INFO, "I/");
-        logTagMap.put(Log.WARN, "W/");
-        logTagMap.put(Log.ERROR, "E/");
-        logTagMap.put(Log.ASSERT, "A/");
-    }
-
     private static final HashMap<String, AopLog> INSTANCE = new HashMap<>();
-    private static final SimpleDateFormat sdfLog = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+    private static final SimpleDateFormat sdfLog = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
     private static final SimpleDateFormat sdfFile = new SimpleDateFormat("yyMMdd");
     private static final Pattern ANONYMOUS_CLASS = Pattern.compile("(\\$\\d+)+$");
-    private static final String rootDir = "Android/data/calm/";
+    private static final String rootDir = "Android/data/";
+    static final int MIN_RETENTION_TIME = 7;
     private String dirName;
-    private Class<?> logClass;
-    private static int retentionTime = 7;
+    private int retentionTime;
 
-    private AopLog(String dirName, Class<?> logClass) {
+    private AopLog(String dirName, int retentionTime) {
         this.dirName = dirName;
-        this.logClass = logClass;
+        this.retentionTime = retentionTime;
     }
 
     public static AopLog getLog() {
@@ -82,20 +69,20 @@ public class AopLog {
     }
 
     public static AopLog getLog(String dirName) {
-        return getLog(dirName, AopLog.class);
+        return getLog(dirName, MIN_RETENTION_TIME);
     }
 
-    public static AopLog getLog(String dirName, Class<?> logClass) {
+    public static synchronized AopLog getLog(String dirName, int retentionTime) {
         AopLog log = INSTANCE.get(dirName);
         if (log == null) {
-            log = new AopLog(dirName, logClass);
+            log = new AopLog(dirName, retentionTime <= 0 ? MIN_RETENTION_TIME : retentionTime);
             INSTANCE.put(dirName, log);
+        } else {
+            if (log.retentionTime < retentionTime) {
+                log.retentionTime = retentionTime;
+            }
         }
         return log;
-    }
-
-    public static void setRetentionTime(int retentionTime) {
-        AopLog.retentionTime = retentionTime;
     }
 
     public File getOutputDir() {
@@ -116,28 +103,21 @@ public class AopLog {
     }
 
     private String getTag() {
-        return getTag(dirName, logClass);
+        return getTag(null);
     }
 
-    private static String getTag(String dirName, Class<?> logClass) {
-        dirName = dirName != null ? dirName : DEFAULT_DIR_NAME;
-        return String.format(TAG_FORMAT, dirName, createStackElementTag(logClass), getThreadName());
+    private static String getTag(String dirName) {
+        String tag = "";
+        if (dirName != null) {
+            tag = dirName + "/";
+        }
+        return tag + String.format(TAG_FORMAT, createStackElementTag(), Thread.currentThread().getName());
     }
 
-    private static String getThreadName() {
-        return Looper.getMainLooper() == Looper.myLooper() ? "main" : "thread-" + Thread.currentThread().getName();
-    }
-
-    private String getLogTag(int priority) {
-        return logTagMap.get(priority) + getTag();
-    }
-
-    private static String createStackElementTag(Class<?> logClass) {
+    private static String createStackElementTag() {
         StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
         for (StackTraceElement element : stackTraceElements) {
-            String elementClassName = element.getClassName();
-            if (!(elementClassName.equals(AopLog.class.getName())
-                    || elementClassName.equals(logClass.getName()))) {
+            if (!element.getClassName().equals(AopLog.class.getName())) {
                 String tag = element.getClassName();
                 /*Matcher m = ANONYMOUS_CLASS.matcher(tag);
                 if (m.find()) {
@@ -150,6 +130,27 @@ public class AopLog {
         return "UNKNOWN";
     }
 
+    public static void info(String msg, Object... args) {
+        getLog().println(Log.INFO, null, msg, args);
+    }
+
+    public static void error(String msg, Object... args) {
+        error(null, msg, args);
+    }
+
+    public static void error(Throwable t, String msg, Object... args) {
+        getLog().println(Log.ERROR, t, msg, args);
+    }
+
+    public void println(int priority, String msg, Object... args) {
+        println(priority, null, msg, args);
+    }
+
+    public void println(int priority, Throwable t, String msg, Object... args) {
+        final String message = getMessage(t, msg, args);
+        Log.println(priority, getTag(dirName), message != null ? message : "{null}");
+    }
+
     public void log(String msg, Object... args) {
         log(null, msg, args);
     }
@@ -160,18 +161,21 @@ public class AopLog {
 
     public void logImmediate(Throwable t, String msg, Object... args) {
         logInner(true, t, msg, args);
+        INSTANCE.clear();
+        EXECUTOR_SERVICE.shutdown();
     }
 
     private void logInner(boolean immediate, Throwable t, String msg, Object... args) {
         final int priority = t != null ? Log.ERROR : Log.INFO;
         final String message = getMessage(t, msg, args);
+        println(priority, message);
         final File outDir = getOutputDir();
         if (immediate) {
-            final String logTag = getLogTag(priority);
+            final String logTag = getTag();
             writeLog(logTag, message, outDir, retentionTime);
         } else {
             final Date logDate = new Date();
-            final String logTag = getLogTag(priority);
+            final String logTag = getTag();
             EXECUTOR_SERVICE.execute(new Runnable() {
                 @Override
                 public void run() {

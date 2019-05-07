@@ -12,7 +12,8 @@ import java.util.concurrent.TimeUnit;
 
 public class LogAopInvoker extends AopInvoker {
 
-    private static final OSLog LOG = OSLog.getLog("profiler");
+    private static final AopLog LOG = AopLog.getLog("profiler");
+    static final int ANR_TIMEOUT = 5 * 1000;
 
     static final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new ThreadFactory() {
         @Override
@@ -27,7 +28,6 @@ public class LogAopInvoker extends AopInvoker {
 
     static final ThreadLocal<StackCount> threadLocalStack = new ThreadLocal<>();
     LogContent logContent;
-    //long mExecuteTimeout = 100;
     long startTimeMillis;
 
     public LogAopInvoker(String target, String methodName, String argsName, int executeTimeout) {
@@ -41,7 +41,7 @@ public class LogAopInvoker extends AopInvoker {
         if (stackCount == null) {
             threadLocalStack.set(stackCount = new StackCount());
             if (isMainThread()) {
-                setExecuteTimeoutLocked(5 * 1000);
+                setExecuteTimeoutLocked(ANR_TIMEOUT);
             }
         }
 
@@ -60,7 +60,7 @@ public class LogAopInvoker extends AopInvoker {
     public void afterInvoke() {
         StackCount stackCount = threadLocalStack.get();
         //System.out.println(String.format("[%s]%s <- stack pop: %d", Thread.currentThread().getName(), mMethodName, stackCount.count));
-        if (stackCount.count > 0) {
+        if (stackCount != null && stackCount.count > 0) {
             long executeTime = System.currentTimeMillis() - startTimeMillis;
             LogContent logContent = stackCount.get(this);
             logContent.setExecuteTime(executeTime);
@@ -178,7 +178,7 @@ public class LogAopInvoker extends AopInvoker {
     }
 
     static class LogContent {
-        long executeTime = Integer.MAX_VALUE; //默认为5s+
+        long executeTime = ANR_TIMEOUT; //默认为5s+
         String target;
         String methodName;
         String argsName;
@@ -202,8 +202,8 @@ public class LogAopInvoker extends AopInvoker {
         }
 
         public String getMessage() {
-            String anr = isANR ? "(ANR)" : "";
-            return String.format("[%s] %s->%s %.2fs %s", Thread.currentThread().getName(), target, methodName + argsName, executeTime / 1000f, anr);
+            String anr = isANR ? "+ (ANR)" : "";
+            return String.format("[%s] %s->%s %.2fs", Thread.currentThread().getName(), target, methodName + argsName, executeTime / 1000f) + anr;
         }
 
         @Override

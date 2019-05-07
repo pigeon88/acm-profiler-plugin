@@ -3,9 +3,6 @@ package com.studio.plugin.acm.profiler.asm;
 import com.studio.plugin.acm.profiler.AopEngine;
 import com.studio.plugin.acm.profiler.BaseWeaver;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -28,9 +25,5 @@ public class ASMWeaver extends BaseWeaver {
         classReader.accept(classWriterWrapper, ClassReader.EXPAND_FRAMES);
         return classWriter.toByteArray();*/
         return AopEngine.doAspect(inputStream, null, executeTimeout);
-    }
-
-    protected ClassVisitor wrapClassWriter(ClassWriter classWriter) {
-        return classWriter;
     }
 }

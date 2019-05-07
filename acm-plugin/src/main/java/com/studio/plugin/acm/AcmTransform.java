@@ -12,6 +12,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.google.common.io.Files;
+import com.studio.plugin.acm.profiler.IWeaver;
 import com.studio.plugin.acm.profiler.WaitableAgent;
 import com.studio.plugin.acm.profiler.asm.ASMWeaver;
 
@@ -29,7 +30,7 @@ public class AcmTransform extends Transform {
 
     protected Project project;
     protected Logger logger;
-    protected WaitableAgent bytecodeWeaver;
+    protected IWeaver bytecodeWeaver;
 
     public AcmTransform(Project project, AcmExtension acmExtension) {
         this.project = project;

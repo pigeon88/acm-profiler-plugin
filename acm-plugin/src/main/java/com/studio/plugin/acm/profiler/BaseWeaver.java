@@ -24,6 +24,7 @@ public abstract class BaseWeaver implements IWeaver {
     private static final FileTime ZERO = FileTime.fromMillis(0);
     private static final String FILE_SEP = File.separator;
 
+    @Override
     public final void weaveJar(File inputJar, File outputJar) throws IOException {
         System.out.println("jar: " + inputJar);
         ZipFile inputZip = new ZipFile(inputJar);
@@ -59,6 +60,7 @@ public abstract class BaseWeaver implements IWeaver {
         outputZip.close();
     }
 
+    @Override
     public final void weaveSingleClassToFile(File inputFile, File outputFile, String inputBaseDir) throws IOException {
         if (!inputBaseDir.endsWith(FILE_SEP)) inputBaseDir = inputBaseDir + FILE_SEP;
         if (isWeavableClass(inputFile.getAbsolutePath().replace(inputBaseDir, ""))) {
@@ -78,16 +80,8 @@ public abstract class BaseWeaver implements IWeaver {
         }
     }
 
-    /*@Override
-    public byte[] weaveSingleClassToByteArray(InputStream inputStream) throws IOException {
-        ClassReader classReader = new ClassReader(inputStream);
-        ClassWriter classWriter = new ExtendClassWriter(classLoader, ClassWriter.COMPUTE_MAXS);
-        ClassVisitor classWriterWrapper = wrapClassWriter(classWriter);
-        classReader.accept(classWriterWrapper, ClassReader.EXPAND_FRAMES);
-        return classWriter.toByteArray();
-    }*/
+    public abstract byte[] weaveSingleClassToByteArray(InputStream inputStream) throws IOException;
 
-    @Override
     public boolean isWeavableClass(String fullQualifiedClassName) {
         fullQualifiedClassName = fullQualifiedClassName.replace(FILE_SEP, "/");
         return fullQualifiedClassName.endsWith(".class") &&
