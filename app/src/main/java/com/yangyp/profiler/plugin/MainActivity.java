@@ -2,6 +2,7 @@ package com.yangyp.profiler.plugin;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
 
 public class MainActivity extends Activity {
 
@@ -9,32 +10,50 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        /*new Thread(new Runnable() {
+
+        findViewById(R.id.main).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
-                System.out.println(Thread.currentThread());
+            public void onClick(View view) {
+                main();
             }
-        }).start();*/
-        System.out.println("abcd\n123456");
-        a();
-        aa();
+        });
+
+        findViewById(R.id.mainAnr).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mainAnr();
+            }
+        });
+
+
+        findViewById(R.id.thread).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainAnr();
+                    }
+                }).start();
+            }
+        });
     }
 
-    static void a() {
+    static void main() {
         System.out.println("a");
-        b();
     }
 
-    static void b() {
+    static void mainAnr() {
         System.out.println("b");
         try {
-            Thread.sleep(100);
+            Thread.sleep(6 * 1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        thread();
     }
 
-    static void aa() {
+    static void thread() {
         System.out.println("aa");
         try {
             Thread.sleep(100);
@@ -44,6 +63,6 @@ public class MainActivity extends Activity {
     }
 
     public static void main(String[] args) {
-        a();
+        main();
     }
 }

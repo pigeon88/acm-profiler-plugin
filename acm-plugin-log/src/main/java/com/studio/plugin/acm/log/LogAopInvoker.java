@@ -45,11 +45,10 @@ public class LogAopInvoker extends AopInvoker {
             }
         }
 
-        if (stackCount.count >= 0) {
-            int count = stackCount.incrementAndGet();
-            //System.out.println(String.format("[%s]%s -> stack push: %d", Thread.currentThread().getName(), mMethodName, count));
-            stackCount.add(this, logContent, count);
-        }
+
+        int count = stackCount.incrementAndGet();
+        //System.out.println(String.format("[%s]%s -> stack push: %d", Thread.currentThread().getName(), mMethodName, count));
+        stackCount.add(this, logContent, count);
         startTimeMillis = System.currentTimeMillis();
     }
 
@@ -61,7 +60,7 @@ public class LogAopInvoker extends AopInvoker {
     public void afterInvoke() {
         StackCount stackCount = threadLocalStack.get();
         //System.out.println(String.format("[%s]%s <- stack pop: %d", Thread.currentThread().getName(), mMethodName, stackCount.count));
-        if (stackCount.count >= 0) {
+        if (stackCount.count > 0) {
             long executeTime = System.currentTimeMillis() - startTimeMillis;
             LogContent logContent = stackCount.get(this);
             logContent.setExecuteTime(executeTime);
@@ -76,7 +75,7 @@ public class LogAopInvoker extends AopInvoker {
 
     void logPrint(StackCount stackCount) {
         StringBuilder builder = new StringBuilder();
-        stackCount.count = -1;
+        stackCount.count = 0;
         Iterator<LogContent> it = stackCount.stack.values().iterator();
         while (it.hasNext()) {
             LogContent logContent = it.next();

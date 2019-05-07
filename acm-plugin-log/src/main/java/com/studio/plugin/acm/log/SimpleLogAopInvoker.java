@@ -5,12 +5,12 @@ package com.studio.plugin.acm.log;
  *
  * @author yangyp
  */
-public class LogAopInvoker190505 extends AopInvoker {
+public class SimpleLogAopInvoker extends AopInvoker {
 
-    private static final AopLog LOG = AopLog.getLog("profiler", LogAopInvoker190505.class);
+    private static final AopLog LOG = AopLog.getLog("profiler", SimpleLogAopInvoker.class);
     private Long mStartTime;
 
-    public LogAopInvoker190505(String target, String methodName, String argsName, int executeTimeout) {
+    public SimpleLogAopInvoker(String target, String methodName, String argsName, int executeTimeout) {
         super(target, methodName, argsName, executeTimeout);
     }
 

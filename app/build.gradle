@@ -43,6 +43,7 @@ dependencies {
     //compile 'com.studio.plugin:studio-acm-log:1.1.190505'
     compile project(':acm-plugin-log')
     testCompile 'junit:junit:4.12'
+    compile 'com.squareup.okhttp3:okhttp:3.8.1'
     //androidTestCompile 'com.android.support.test:runner:1.0.2'
     //androidTestCompile 'com.android.support.test.espresso:espresso-core:3.0.2'
 }

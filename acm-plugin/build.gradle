@@ -18,8 +18,12 @@ dependencies {
     compile gradleApi()
     compile localGroovy()
     compile 'com.android.tools.build:gradle:2.3.3'
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    //compile fileTree(dir: 'libs', include: ['*.jar'])
     //compile project(':buildsrc-profiler')
+    //ASM相关
+    //compile 'org.ow2.asm:asm:5.1'
+    //compile 'org.ow2.asm:asm-util:5.1'
+    //compile 'org.ow2.asm:asm-commons:5.1'
 }
 
 repositories {

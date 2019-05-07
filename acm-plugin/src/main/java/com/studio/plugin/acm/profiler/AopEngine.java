@@ -10,6 +10,7 @@ import org.objectweb.asm.Opcodes;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 
@@ -142,7 +143,7 @@ public class AopEngine {
      * @return
      * @throws Exception
      */
-    public static byte[] doAspect(InputStream classInputStream, String aopClassName, int executeTimeout) throws Exception {
+    public static byte[] doAspect(InputStream classInputStream, String aopClassName, int executeTimeout) throws IOException {
         return doAspect(new ClassReader(classInputStream), aopClassName, executeTimeout);
     }
 
