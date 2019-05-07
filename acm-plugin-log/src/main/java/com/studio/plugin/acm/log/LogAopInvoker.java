@@ -80,11 +80,14 @@ public class LogAopInvoker extends AopInvoker {
         while (it.hasNext()) {
             LogContent logContent = it.next();
             if (logContent.executeTime >= mExecuteTimeout) {
-                String pop = logContent.getMessage();
-                builder.append(pop);
+                builder.append("[" + logContent.threadName + "] ");
+                int space = (logContent.count - 2) * 4;
+                while (space-- > 0) {
+                    builder.append("-");
+                }
+                builder.append(logContent.getMessage());
                 if (it.hasNext()) {
                     builder.append("\n");
-                    //builder.append(String.format("%" + logContent.count * 3 + "s", ""));
                 }
             }
         }
@@ -183,6 +186,7 @@ public class LogAopInvoker extends AopInvoker {
         String methodName;
         String argsName;
         boolean isANR;
+        String threadName;
         int count;
 
         public LogContent(String target, String methodName, String argsName) {
@@ -190,6 +194,7 @@ public class LogAopInvoker extends AopInvoker {
             this.methodName = methodName;
             this.argsName = argsName;
             this.isANR = true;
+            this.threadName = Thread.currentThread().getName();
         }
 
         public void setCount(int count) {
@@ -203,7 +208,7 @@ public class LogAopInvoker extends AopInvoker {
 
         public String getMessage() {
             String anr = isANR ? "+ (ANR)" : "";
-            return String.format("[%s] %s->%s %.2fs", Thread.currentThread().getName(), target, methodName + argsName, executeTime / 1000f) + anr;
+            return String.format("%s->%s %.2fs", target, methodName + argsName, executeTime / 1000f) + anr;
         }
 
         @Override

@@ -4,6 +4,7 @@ import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
@@ -225,10 +226,12 @@ public class AopLog {
             checkIfExistsOrCreate(outDir);
             deleteDaysBeforeLogFile(retentionTime, outDir);
             File file = new File(outDir, String.format(outDir.getName() + "_%s.log", sdfFile.format(logDate)));
-            FileOutputStream raf = new FileOutputStream(file, true);
+            FileOutputStream stream = new FileOutputStream(file, true);
+            BufferedOutputStream raf = new BufferedOutputStream(new FileOutputStream(file, true));
             raf.write(String.format("[%s] %s: %s", sdfLog.format(logDate), tag, msg).getBytes());
             raf.write("\r\n".getBytes());
-            raf.getFD().sync();
+            stream.getFD().sync();
+            raf.flush();
             raf.close();
         } catch (Throwable e) {
             Log.e(getTag(), "file write error:" + e);

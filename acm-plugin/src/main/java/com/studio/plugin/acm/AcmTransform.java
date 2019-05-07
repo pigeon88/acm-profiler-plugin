@@ -11,9 +11,9 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.studio.plugin.acm.profiler.IWeaver;
-import com.studio.plugin.acm.profiler.WaitableAgent;
 import com.studio.plugin.acm.profiler.asm.ASMWeaver;
 
 import org.apache.commons.io.FileUtils;
@@ -35,7 +35,7 @@ public class AcmTransform extends Transform {
     public AcmTransform(Project project, AcmExtension acmExtension) {
         this.project = project;
         this.logger = project.getLogger();
-        this.bytecodeWeaver = new WaitableAgent(new ASMWeaver(acmExtension.executeTimeout));
+        this.bytecodeWeaver = new ASMWeaver(acmExtension.executeTimeout);
     }
 
     @Override
@@ -50,13 +50,14 @@ public class AcmTransform extends Transform {
 
     @Override
     public Set<? super QualifiedContent.Scope> getScopes() {
-        return TransformManager.SCOPE_FULL_PROJECT;
-        /*return Sets.immutableEnumSet(
+        //return TransformManager.SCOPE_FULL_PROJECT;
+        return Sets.immutableEnumSet(
                 QualifiedContent.Scope.PROJECT,
                 //QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
-                QualifiedContent.Scope.SUB_PROJECTS,
-                //QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS,
-                QualifiedContent.Scope.EXTERNAL_LIBRARIES);*/
+                QualifiedContent.Scope.SUB_PROJECTS
+                //QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS
+                //QualifiedContent.Scope.EXTERNAL_LIBRARIES
+        );
     }
 
     @Override

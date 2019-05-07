@@ -2,6 +2,7 @@ package com.studio.plugin.acm;
 
 import org.gradle.api.tasks.Input;
 
+import java.util.Collection;
 import java.util.HashSet;
 
 import groovy.transform.CompileStatic;
@@ -16,7 +17,7 @@ public class AcmExtension {
     int executeTimeout;
 
     @Input
-    String includePackage;
+    HashSet<String> includePackage = new HashSet<>();
 
     @Input
     HashSet<String> excludePackage = new HashSet<>();
