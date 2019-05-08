@@ -10,13 +10,13 @@ public abstract class AopInvoker {
     protected final String mTarget;
     protected final String mMethodName;
     protected final String mArgsName;
-    protected final int mExecuteTimeout;
+    protected static int mExecuteTimeout;
 
     public AopInvoker(String target, String methodName, String argsName, int executeTimeout) {
         this.mTarget = target;
         this.mMethodName = methodName;
         this.mArgsName = argsName;
-        this.mExecuteTimeout = executeTimeout;
+        mExecuteTimeout = executeTimeout;
     }
 
     /**
