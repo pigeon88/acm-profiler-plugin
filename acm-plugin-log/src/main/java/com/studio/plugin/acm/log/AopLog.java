@@ -230,9 +230,10 @@ public class AopLog {
             BufferedOutputStream raf = new BufferedOutputStream(new FileOutputStream(file, true));
             raf.write(String.format("[%s] %s: %s", sdfLog.format(logDate), tag, msg).getBytes());
             raf.write("\r\n".getBytes());
-            stream.getFD().sync();
             raf.flush();
             raf.close();
+            stream.getFD().sync();
+            stream.close();
         } catch (Throwable e) {
             Log.e(getTag(), "file write error:" + e);
         }
